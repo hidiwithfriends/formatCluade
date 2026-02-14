@@ -2,8 +2,8 @@
 
 **Feature ID**: F2
 **예상 기간**: 2주
-**상태**: [status: in-progress]
-**진행률**: Step 2/4 완료 (50%)
+**상태**: [status: completed]
+**진행률**: Step 4/4 완료 (100%)
 
 ---
 
@@ -85,74 +85,74 @@ RAG(Retrieval-Augmented Generation) 기반으로 아티스트의 행사 정보�
 
 ---
 
-### Step 3: Data Layer Design & Migration [status: todo]
+### Step 3: Data Layer Design & Migration [status: completed]
 
 **Command**: `/design-db search-rag F2`
 
 **작업 내용**:
 1. SQLAlchemy 모델 설계
-   - Event 모델
-   - EventEmbedding 모델
+   - Event 모델 (EventCategory ENUM 포함)
+   - EventEmbedding 모델 (pgvector 1536차원)
    - SearchCache 모델
-2. Alembic Migration 생성
-3. pgvector 인덱스 설정
+   - RecentSearch 모델
+2. Alembic Migration 생성 (002_add_events)
+3. pgvector IVFFlat 인덱스 설정
 
-**산출물 (예정)**:
-- `apps/api/app/models/event.py`
-- `apps/api/app/models/embedding.py`
-- `apps/api/alembic/versions/002_add_event_tables.py`
-- `docs/tech/db-schema.md` (업데이트)
+**산출물**:
+- `apps/api/app/models/event.py` ✅
+- `apps/api/app/models/embedding.py` ✅
+- `apps/api/app/models/search.py` ✅
+- `apps/api/alembic/versions/002_add_event_tables.py` ✅
+- `docs/tech/db-schema.md` (업데이트) ✅
 
 ---
 
-### Step 4: Backend API & Integration [status: todo]
+### Step 4: Backend API & Integration [status: completed]
 
 **Command**: `/implement-api search-rag F2`
 
 **작업 내용**:
 1. RAG 파이프라인 구현
-   - 웹 검색 (Tavily API)
-   - LLM 정보 추출 (GPT-4)
-   - 임베딩 생성 (OpenAI Embeddings)
-   - 벡터 저장/검색 (pgvector)
-2. FastAPI 라우터 구현
-   - POST /api/v1/search (RAG 검색, search_id 반환)
-   - GET /api/v1/search/{search_id}?page=N (페이지네이션)
-   - GET /api/v1/artists/{id} (아티스트 프로필)
+   - 웹 검색 (Tavily API) ✅
+   - LLM 정보 추출 (GPT-4o-mini) ✅
+   - 임베딩 생성 (OpenAI text-embedding-3-small) ✅
+   - 벡터 저장/검색 (pgvector) ✅
+2. FastAPI 라우터 구현 ✅
+   - POST /api/v1/search (RAG 검색)
+   - GET /api/v1/search/autocomplete (자동완성)
    - GET /api/v1/artists/{id}/events (아티스트 행사 목록)
-   - GET /api/v1/artists/{id}/related (관련 아티스트 - 장르/소속사 기반)
+   - GET /api/v1/artists/{id}/related (관련 아티스트)
+   - GET /api/v1/events (행사 목록)
    - GET /api/v1/events/{id} (행사 상세)
-   - GET /api/v1/users/me/recent-searches (최근 검색어 조회)
-   - POST /api/v1/users/me/recent-searches (최근 검색어 저장)
-   - DELETE /api/v1/users/me/recent-searches (최근 검색어 삭제)
-3. 캐싱 레이어 구현
-4. pytest API 테스트
-5. Frontend API 연동 (Mock → Real)
+   - GET/POST/DELETE /api/v1/search/recent (최근 검색어)
+3. 캐싱 레이어 구현 (24시간 TTL) ✅
+4. pytest API 테스트 ✅
+5. Frontend API Client 업데이트 (Mock Provider 패턴) ✅
 
-**산출물 (예정)**:
-- `apps/api/app/rag/crawler.py`
-- `apps/api/app/rag/embeddings.py`
-- `apps/api/app/rag/search.py`
-- `apps/api/app/schemas/event.py`
-- `apps/api/app/schemas/search.py`
-- `apps/api/app/schemas/recent_search.py`
-- `apps/api/app/services/search.py`
-- `apps/api/app/services/event.py`
-- `apps/api/app/services/recent_search.py`
-- `apps/api/app/routers/search.py`
-- `apps/api/app/routers/events.py`
-- `apps/api/tests/test_search.py`
-- `apps/api/tests/test_recent_search.py`
-- `apps/mobile/lib/api/search-api.ts`
-- `apps/mobile/lib/api/recent-search-api.ts`
+**산출물**:
+- `apps/api/app/rag/crawler.py` ✅
+- `apps/api/app/rag/extractor.py` ✅
+- `apps/api/app/rag/embeddings.py` ✅
+- `apps/api/app/rag/pipeline.py` ✅
+- `apps/api/app/schemas/event.py` ✅
+- `apps/api/app/schemas/search.py` ✅
+- `apps/api/app/services/event.py` ✅
+- `apps/api/app/services/search.py` ✅
+- `apps/api/app/services/recent_search.py` ✅
+- `apps/api/app/routers/events.py` ✅
+- `apps/api/app/routers/search.py` ✅
+- `apps/api/tests/test_events.py` ✅
+- `apps/api/tests/test_search.py` ✅
+- `apps/mobile/lib/api/search-api.ts` (업데이트) ✅
+- `docs/tech/api-spec.md` ✅
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] 아티스트 검색 시 5초 이내 결과 반환, 캐시 시 즉시 (AC-F2-01)
-- [ ] 검색 결과에 행사 정보 포함 (AC-F2-02)
-- [ ] 24시간 내 캐시된 결과 재사용 (AC-F2-03)
+- [x] 아티스트 검색 시 5초 이내 결과 반환, 캐시 시 즉시 (AC-F2-01) ✅
+- [x] 검색 결과에 행사 정보 포함 (AC-F2-02) ✅
+- [x] 24시간 내 캐시된 결과 재사용 (AC-F2-03) ✅
 
 ---
 

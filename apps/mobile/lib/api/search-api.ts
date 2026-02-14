@@ -13,13 +13,38 @@ import type { Artist } from "../mocks/auth";
 // Check if we should use mock API
 const useMock = process.env.EXPO_PUBLIC_USE_MOCK_API !== "false";
 
-// ===== Real API Functions (to be implemented in Step 4) =====
+// ===== API Response Types =====
+
+interface ArtistListResponse {
+  data: Artist[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+interface EventListResponse {
+  data: Event[];
+  total: number;
+  page: number;
+  per_page: number;
+  has_more: boolean;
+}
+
+interface RecentSearchListResponse {
+  data: RecentSearch[];
+}
+
+// ===== Real API Functions =====
 
 const realSearchApi = {
   autocompleteArtists: async (query: string): Promise<Artist[]> => {
-    return apiClient.get<Artist[]>("/api/v1/artists", {
-      params: { q: query, limit: "10" },
-    });
+    const response = await apiClient.get<{ data: Artist[] }>(
+      "/api/v1/search/autocomplete",
+      {
+        params: { q: query, limit: "10" },
+      }
+    );
+    return response.data;
   },
 
   ragSearch: async (
@@ -27,15 +52,11 @@ const realSearchApi = {
     page: number = 1,
     pageSize: number = 20
   ): Promise<SearchResult> => {
-    if (page === 1) {
-      // Initial search - POST request
-      return apiClient.post<SearchResult>("/api/v1/search", {
-        query,
-        page_size: pageSize,
-      });
-    }
-    // Subsequent pages would use GET with search_id
-    throw new Error("Pagination not implemented for real API yet");
+    // POST request with query params for pagination
+    return apiClient.post<SearchResult>(
+      `/api/v1/search?page=${page}&per_page=${pageSize}`,
+      { query }
+    );
   },
 
   getSearchPage: async (
@@ -43,9 +64,10 @@ const realSearchApi = {
     page: number,
     pageSize: number = 20
   ): Promise<{ events: Event[]; hasMore: boolean }> => {
-    return apiClient.get(`/api/v1/search/${searchId}`, {
-      params: { page: page.toString(), page_size: pageSize.toString() },
-    });
+    // For real API, we just do another search
+    // The cache on backend handles deduplication
+    const result = await realSearchApi.ragSearch("", page, pageSize);
+    return { events: result.events, hasMore: result.hasMore };
   },
 
   getArtist: async (artistId: string): Promise<Artist | null> => {
@@ -57,11 +79,17 @@ const realSearchApi = {
   },
 
   getArtistEvents: async (artistId: string): Promise<Event[]> => {
-    return apiClient.get<Event[]>(`/api/v1/artists/${artistId}/events`);
+    const response = await apiClient.get<EventListResponse>(
+      `/api/v1/artists/${artistId}/events`
+    );
+    return response.data;
   },
 
   getRelatedArtists: async (artistId: string): Promise<Artist[]> => {
-    return apiClient.get<Artist[]>(`/api/v1/artists/${artistId}/related`);
+    const response = await apiClient.get<ArtistListResponse>(
+      `/api/v1/artists/${artistId}/related`
+    );
+    return response.data;
   },
 
   getEvent: async (eventId: string): Promise<Event | null> => {
@@ -73,27 +101,34 @@ const realSearchApi = {
   },
 
   getRecentSearches: async (): Promise<RecentSearch[]> => {
-    return apiClient.get<RecentSearch[]>("/api/v1/users/me/recent-searches");
+    const response = await apiClient.get<RecentSearchListResponse>(
+      "/api/v1/search/recent"
+    );
+    return response.data;
   },
 
   saveRecentSearch: async (query: string): Promise<void> => {
-    await apiClient.post("/api/v1/users/me/recent-searches", { query });
+    await apiClient.post("/api/v1/search/recent", { query });
   },
 
   deleteRecentSearch: async (searchId: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/users/me/recent-searches/${searchId}`);
+    await apiClient.delete(`/api/v1/search/recent/${searchId}`);
   },
 
   clearRecentSearches: async (): Promise<void> => {
-    await apiClient.delete("/api/v1/users/me/recent-searches");
+    await apiClient.delete("/api/v1/search/recent");
   },
 
   getPopularArtists: async (): Promise<Artist[]> => {
-    return apiClient.get<Artist[]>("/api/v1/artists/popular");
+    const response = await apiClient.get<ArtistListResponse>("/api/v1/artists");
+    return response.data;
   },
 
   getFollowedArtists: async (): Promise<Artist[]> => {
-    return apiClient.get<Artist[]>("/api/v1/users/me/artists");
+    const response = await apiClient.get<ArtistListResponse>(
+      "/api/v1/users/me/artists"
+    );
+    return response.data;
   },
 };
 

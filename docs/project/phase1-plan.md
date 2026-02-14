@@ -5,7 +5,7 @@
 **목표**: 핵심 기능을 갖춘 최소 실행 가능 제품 출시
 **기간**: 8-10주
 **상태**: [status: in-progress]
-**진행률**: 30% (F1 완료, F2 Step 2 완료)
+**진행률**: 40% (F1 완료, F2 완료)
 
 ---
 
@@ -48,7 +48,7 @@
 
 ---
 
-### F2: 아티스트 검색 & RAG [status: in-progress]
+### F2: 아티스트 검색 & RAG [status: completed]
 
 **예상 기간**: 2주
 **상세 계획**: `docs/project/features/f2-search-rag.md`
@@ -56,23 +56,23 @@
 **범위**:
 - 아티스트 검색 UI
 - RAG 파이프라인 구현
-  - 웹 검색 (Tavily/Google)
-  - 정보 추출 (GPT-4)
+  - 웹 검색 (Tavily API)
+  - 정보 추출 (GPT-4o-mini)
   - 임베딩 생성 (OpenAI Embeddings)
   - 벡터 저장 (pgvector)
-- 검색 결과 캐싱
+- 검색 결과 캐싱 (24시간 TTL)
 
 **의존성**: F1 (인증)
 
 **Step 진행 상황**:
 - [x] Step 1: UX Planning & Design ✅
 - [x] Step 2: Frontend Prototype with Mock ✅
-- [ ] Step 3: Data Layer Design & Migration
-- [ ] Step 4: Backend API & Integration
+- [x] Step 3: Data Layer Design & Migration ✅
+- [x] Step 4: Backend API & Integration ✅
 
 ---
 
-### F3: 행사 캘린더 [status: todo]
+### F3: 행사 캘린더 [status: in-progress]
 
 **예상 기간**: 2주
 **상세 계획**: `docs/project/features/f3-calendar.md`
@@ -84,6 +84,12 @@
 - 로컬 캘린더 연동 (선택)
 
 **의존성**: F1 (인증), F2 (검색)
+
+**Step 진행 상황**:
+- [x] Step 1: UX Planning & Design ✅
+- [ ] Step 2: Frontend Prototype with Mock
+- [ ] Step 3: Data Layer Design & Migration
+- [ ] Step 4: Backend API & Integration
 
 ---
 
